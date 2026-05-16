@@ -66,25 +66,37 @@ class InputSimulator:
         print("Clicking to dismiss screen")
         pyautogui.click(960, 540)
 
+    def click_shop_bait(self):
+        print("Clicking Bait Slot")
+        pydirectinput.click(MACRO_COORD_SHOP_BAIT[0], MACRO_COORD_SHOP_BAIT[1])
+
     def click_shop_max(self):
         print("Clicking MAX bait")
-        pydirectinput.click(POS_SHOP_MAX[0], POS_SHOP_MAX[1])
+        pydirectinput.click(MACRO_COORD_SHOP_MAX[0], MACRO_COORD_SHOP_MAX[1])
 
     def click_purchase(self):
         print("Clicking PURCHASE")
-        pydirectinput.click(POS_SHOP_PURCHASE[0], POS_SHOP_PURCHASE[1])
+        pydirectinput.click(MACRO_COORD_SHOP_PURCHASE[0], MACRO_COORD_SHOP_PURCHASE[1])
+
+    def click_shop_confirm(self):
+        print("Clicking CONFIRM PURCHASE")
+        pydirectinput.click(MACRO_COORD_SHOP_CONFIRM[0], MACRO_COORD_SHOP_CONFIRM[1])
+
+    def click_shop_empty(self):
+        print("Clicking Empty Area (Dismiss)")
+        pydirectinput.click(MACRO_COORD_SHOP_EMPTY[0], MACRO_COORD_SHOP_EMPTY[1])
 
     def click_inv_tab_hold(self):
         print("Clicking Fish Hold Tab")
-        pydirectinput.click(POS_INV_TAB_HOLD[0], POS_INV_TAB_HOLD[1])
+        pydirectinput.click(MACRO_COORD_FISH_HOLD[0], MACRO_COORD_FISH_HOLD[1])
 
     def click_quick_sell(self):
         print("Clicking Quick Sell")
-        pydirectinput.click(POS_INV_QUICK_SELL[0], POS_INV_QUICK_SELL[1])
+        pydirectinput.click(MACRO_COORD_SELL_BTN[0], MACRO_COORD_SELL_BTN[1])
 
     def click_confirm_sell(self):
         print("Clicking Confirm Sell")
-        pydirectinput.click(POS_INV_CONFIRM[0], POS_INV_CONFIRM[1])
+        pydirectinput.click(MACRO_COORD_CONFIRM_SELL[0], MACRO_COORD_CONFIRM_SELL[1])
 
     def stop_all(self):
         self.release_all()

@@ -47,6 +47,7 @@ def print_main_menu():
     print("      → Set bait count")
     print("      → Set Auto-Sell Threshold (default: 1000)")
     print("      → Setup Macros (Auto-Sell)")
+    print("      → Setup Macros (Auto-Shop)")
     print("  8 — Training and data collection (DEV DEBUG)")
     print("      → Toggle Auto-Capture ON/OFF")
     print("      → Setup Macros (Weather)")
@@ -58,6 +59,71 @@ def print_main_menu():
     print("\n[MANUAL OVERRIDES]")
     print("  Y: IDLE | U: WAITING | I: HOOKED | O: MINIGAME | P: CAUGHT")
 
+
+# ------------------------------------------------------------------ #
+# Shop Macro Setup                                                     #
+# ------------------------------------------------------------------ #
+def setup_shop_macro():
+    print("\n" + "="*55)
+    print("  AUTO-SHOP MACRO SETUP")
+    print("="*55)
+    
+    def get_pos():
+        while True:
+            if is_key_pressed(VK_M): # M
+                class POINT(ctypes.Structure):
+                    _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+                pt = POINT()
+                ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+                time.sleep(0.5) # debounce
+                return pt.x, pt.y
+            time.sleep(0.01)
+
+    coords = {}
+    print("\n1. [AUTO-SHOP] Open Shop (R), hover over the Bait you want to buy and press M.")
+    coords['SHOP_BAIT'] = get_pos()
+    print(f"   Saved: {coords['SHOP_BAIT']}")
+
+    print("\n2. [AUTO-SHOP] Hover over the 'MAX' or quantity slider and press M.")
+    coords['SHOP_MAX'] = get_pos()
+    print(f"   Saved: {coords['SHOP_MAX']}")
+
+    print("\n3. [AUTO-SHOP] Hover over the 'Purchase' button and press M.")
+    coords['SHOP_PURCHASE'] = get_pos()
+    print(f"   Saved: {coords['SHOP_PURCHASE']}")
+
+    print("\n4. [AUTO-SHOP] Hover over the 'Confirm Purchase' button (if any) and press M.")
+    coords['SHOP_CONFIRM'] = get_pos()
+    print(f"   Saved: {coords['SHOP_CONFIRM']}")
+
+    print("\n5. [AUTO-SHOP] Hover over an empty area (to dismiss popups) and press M.")
+    coords['SHOP_EMPTY'] = get_pos()
+    print(f"   Saved: {coords['SHOP_EMPTY']}")
+    
+    # Save to config.py
+    try:
+        config_path = os.path.join(os.path.dirname(__file__), "config.py")
+        with open(config_path, "r") as f:
+            lines = f.readlines()
+            
+        new_lines = []
+        for line in lines:
+            if "MACRO_COORD_SHOP_BAIT =" in line:
+                new_lines.append(f"MACRO_COORD_SHOP_BAIT = {coords['SHOP_BAIT']}\n")
+            elif "MACRO_COORD_SHOP_MAX =" in line:
+                new_lines.append(f"MACRO_COORD_SHOP_MAX = {coords['SHOP_MAX']}\n")
+            elif "MACRO_COORD_SHOP_PURCHASE =" in line:
+                new_lines.append(f"MACRO_COORD_SHOP_PURCHASE = {coords['SHOP_PURCHASE']}\n")
+            elif "MACRO_COORD_SHOP_EMPTY =" in line:
+                new_lines.append(f"MACRO_COORD_SHOP_EMPTY = {coords['SHOP_EMPTY']}\n")
+            else:
+                new_lines.append(line)
+                
+        with open(config_path, "w") as f:
+            f.writelines(new_lines)
+        print("\n>>> Shop coordinates saved to config.py! Please restart the bot.")
+    except Exception as e:
+        print(f"Error saving shop macro coords: {e}")
 
 # ------------------------------------------------------------------ #
 # Data Collection Macro Setup                                          #
@@ -114,6 +180,22 @@ def setup_collection_macro():
     print("\n9. [AUTO-SELL] Hover over the 'Confirm Sale' button and press M.")
     coords['CONFIRM_SELL'] = get_pos()
     print(f"   Saved: {coords['CONFIRM_SELL']}")
+
+    print("\n10. [AUTO-SHOP] Open Shop (R), hover over the Bait you want to buy and press M.")
+    coords['SHOP_BAIT'] = get_pos()
+    print(f"   Saved: {coords['SHOP_BAIT']}")
+
+    print("\n11. [AUTO-SHOP] Hover over the 'MAX' or quantity slider and press M.")
+    coords['SHOP_MAX'] = get_pos()
+    print(f"   Saved: {coords['SHOP_MAX']}")
+
+    print("\n12. [AUTO-SHOP] Hover over the 'Purchase' button and press M.")
+    coords['SHOP_PURCHASE'] = get_pos()
+    print(f"   Saved: {coords['SHOP_PURCHASE']}")
+
+    print("\n13. [AUTO-SHOP] Hover over an empty area (to dismiss popups) and press M.")
+    coords['SHOP_EMPTY'] = get_pos()
+    print(f"   Saved: {coords['SHOP_EMPTY']}")
     
     # Save to config.py
     try:
@@ -141,6 +223,14 @@ def setup_collection_macro():
                 new_lines.append(f"MACRO_COORD_SELL_BTN = {coords['SELL_BTN']}\n")
             elif "MACRO_COORD_CONFIRM_SELL =" in line:
                 new_lines.append(f"MACRO_COORD_CONFIRM_SELL = {coords['CONFIRM_SELL']}\n")
+            elif "MACRO_COORD_SHOP_BAIT =" in line:
+                new_lines.append(f"MACRO_COORD_SHOP_BAIT = {coords['SHOP_BAIT']}\n")
+            elif "MACRO_COORD_SHOP_MAX =" in line:
+                new_lines.append(f"MACRO_COORD_SHOP_MAX = {coords['SHOP_MAX']}\n")
+            elif "MACRO_COORD_SHOP_PURCHASE =" in line:
+                new_lines.append(f"MACRO_COORD_SHOP_PURCHASE = {coords['SHOP_PURCHASE']}\n")
+            elif "MACRO_COORD_SHOP_EMPTY =" in line:
+                new_lines.append(f"MACRO_COORD_SHOP_EMPTY = {coords['SHOP_EMPTY']}\n")
             else:
                 new_lines.append(line)
                 
@@ -174,6 +264,7 @@ def main():
     has_counted_catch     = False
     fish_caught_counter   = 0
     bait_count            = 9999
+    bait_sets_to_buy      = 1
     state_entry_time      = time.time()
 
     # ---- Bot mode ----
@@ -195,6 +286,10 @@ def main():
     last_snap_time = 0
     sell_step = 0
     auto_sell_pending = False
+    auto_shop_pending = False
+    sell_step = 0
+    shop_step = 0
+    shop_loop_count = 0
     try:
         while True:
             # -------------------------------------------------------- #
@@ -231,7 +326,9 @@ def main():
                 print("  1 — Select Target Monitor")
                 print("  2 — Set Bait Count")
                 print("  3 — Set Auto-Sell Threshold")
-                print("  4 — Setup Macros (Auto-Sell)")
+                print("  4 — Set Bait Sets to Buy (99 each)")
+                print("  5 — Setup Macros (Auto-Sell)")
+                print("  6 — Setup Macros (Auto-Shop)")
                 print("  ESC — Back to Main Menu")
                 print("="*40)
                 
@@ -258,7 +355,17 @@ def main():
                         except: print("!!! Invalid.")
                         break
                     if is_key_pressed(VK_4):
+                        try:
+                            val = input("\nEnter bait sets to buy (99 each): ")
+                            bait_sets_to_buy = int(val)
+                            print(f">>> Will buy {bait_sets_to_buy} sets ({bait_sets_to_buy * 99} bait)!")
+                        except: print("!!! Invalid.")
+                        break
+                    if is_key_pressed(VK_5):
                         setup_collection_macro()
+                        break
+                    if is_key_pressed(VK_6):
+                        setup_shop_macro()
                         break
                     if is_key_pressed(VK_ESC):
                         break
@@ -413,6 +520,8 @@ def main():
                 # --- STICKY STATES (Don't let vision override these) ---
                 if current_state == STATE_AUTO_SELL:
                     detected = STATE_AUTO_SELL
+                if current_state == STATE_AUTO_SHOP:
+                    detected = STATE_AUTO_SHOP
                 
                 # Guard: prevent backwards jump from MINIGAME -> HOOKED
                 if current_state == STATE_MINIGAME and detected == STATE_HOOKED:
@@ -463,6 +572,16 @@ def main():
                     state_entry_time = time.time()
                     auto_sell_pending = False
                     sell_step = 0
+                    last_action_time = time.time()
+                    continue
+
+                if auto_shop_pending:
+                    print("\n>>> STARTING AUTO-SHOP SEQUENCE (From IDLE)...")
+                    current_state = STATE_AUTO_SHOP
+                    state_entry_time = time.time()
+                    auto_shop_pending = False
+                    shop_step = 0
+                    shop_loop_count = 0
                     last_action_time = time.time()
                     continue
 
@@ -525,12 +644,7 @@ def main():
                     print(f">>> Weather changed. Resuming collection for next 24 minutes...")
                     continue 
 
-                if fish_caught_counter >= (bait_count - 5):
-                    print(">>> BAIT LOW! Starting Economy Loop (Sell → Buy)...")
-                    print(">>> Step 1: Selling Fish...")
-                    inputs.press_q()
-                    time.sleep(2.0)
-                elif time.time() - last_action_time > 0.5:
+                if time.time() - last_action_time > 0.5:
                     print("Casting...")
                     inputs.press_f()
                     last_action_time = time.time()
@@ -593,31 +707,69 @@ def main():
                 # Check if it's time to AUTO-SELL
                 import config
                 if config.total_fish_session >= config.AUTO_SELL_THRESHOLD:
-                    print(f"\n>>> THRESHOLD REACHED ({config.total_fish_session})! Will sell once back in IDLE...")
-                    auto_sell_pending = True
-                    # We don't switch state yet! Let it clear the catch screen normally.
+                    if not auto_sell_pending:
+                        print(f"\n>>> SELL THRESHOLD REACHED ({config.total_fish_session})! Will sell once back in IDLE...")
+                        auto_sell_pending = True
                 
+                # Check if it's time to AUTO-SHOP
                 if fish_caught_counter >= (bait_count - 5):
-                    print(f"  [!] Bait low ({fish_caught_counter}/{bait_count}). Will sell+shop after this.")
+                    if not auto_shop_pending:
+                        print(f"  [!] Bait low ({fish_caught_counter}/{bait_count}). Will shop once back in IDLE.")
+                        auto_shop_pending = True
 
                 if time.time() - last_action_time > 2.0:
                     inputs.click_center()
                     last_action_time = time.time()
 
-            elif current_state == STATE_SHOP:
-                print(">>> SHOP: Buying 99 bait...")
-                time.sleep(1.0)
-                inputs.click_shop_max()
-                time.sleep(0.5)
-                inputs.click_purchase()
-                time.sleep(1.0)
-                inputs.press_esc()
-                time.sleep(1.0)
-                inputs.press_esc()
-                time.sleep(1.0)
-                fish_caught_counter = 0
-                bait_count = 99
-                print(f">>> Economy loop complete! Bait: {bait_count}. Resuming...")
+            elif current_state == STATE_AUTO_SHOP:
+                # Sequence: R -> Bait -> Max -> Purchase -> Empty -> Esc -> Idle
+                if time.time() - last_action_time < 3.0:
+                    continue
+                
+                last_action_time = time.time()
+                
+                if shop_step == 0:
+                    inputs.press_r()
+                    print("  [Auto-Shop] Step 1: Opening Shop (R)...")
+                    shop_step = 1
+                elif shop_step == 1:
+                    inputs.click_at(MACRO_COORD_SHOP_BAIT[0], MACRO_COORD_SHOP_BAIT[1])
+                    print("  [Auto-Shop] Step 2: Clicking Bait Slot...")
+                    shop_step = 2
+                elif shop_step == 2:
+                    inputs.click_at(MACRO_COORD_SHOP_MAX[0], MACRO_COORD_SHOP_MAX[1])
+                    print("  [Auto-Shop] Step 3: Clicking MAX...")
+                    shop_step = 3
+                elif shop_step == 3:
+                    inputs.click_at(MACRO_COORD_SHOP_PURCHASE[0], MACRO_COORD_SHOP_PURCHASE[1])
+                    print("  [Auto-Shop] Step 4: Clicking Purchase...")
+                    shop_step = 4
+                elif shop_step == 4:
+                    inputs.click_at(MACRO_COORD_SHOP_CONFIRM[0], MACRO_COORD_SHOP_CONFIRM[1])
+                    print("  [Auto-Shop] Step 5: Clicking Confirm Purchase...")
+                    shop_step = 5
+                elif shop_step == 5:
+                    inputs.click_at(MACRO_COORD_SHOP_EMPTY[0], MACRO_COORD_SHOP_EMPTY[1])
+                    print("  [Auto-Shop] Step 6: Clicking Empty Area...")
+                    shop_step = 6
+                elif shop_step == 6:
+                    inputs.press_esc()
+                    print("  [Auto-Shop] Step 7: Closing Shop (ESC)...")
+                    shop_step = 7
+                else:
+                    shop_loop_count += 1
+                    if shop_loop_count < bait_sets_to_buy:
+                        print(f">>> Set {shop_loop_count}/{bait_sets_to_buy} complete. Relooping...")
+                        shop_step = 1 # Back to clicking bait slot or max? User said loop: max -> purchase -> confirm -> empty
+                        # Wait, user said: "loop the max quantity -> purchase -> confirm puirchase -> click empty area -> reloop"
+                        # So we go back to Step 3 (Clicking MAX)
+                        shop_step = 3
+                    else:
+                        fish_caught_counter = 0
+                        bait_count = bait_sets_to_buy * 99
+                        print(f">>> AUTO-SHOP COMPLETE! Bought {bait_sets_to_buy} sets. Resuming...")
+                        current_state = STATE_IDLE
+                        state_entry_time = time.time()
                 last_action_time = time.time()
 
             elif current_state == STATE_INVENTORY:
@@ -678,6 +830,7 @@ def main():
                     sell_step = 0
                     print(">>> AUTO-SELL COMPLETE! Resetting counter and resuming...")
                     current_state = STATE_IDLE
+                    state_entry_time = time.time()
 
             # Reset catch-flag when not on CAUGHT screen
             if current_state != STATE_CAUGHT:
