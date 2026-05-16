@@ -1,0 +1,25 @@
+# Virtual Environments
+venv/
+venv_dml/
+
+# Training Data and Collected Data
+Train/TrainingData/
+CaptureData/
+RawData/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Model checkpoints and logs
+Train/CORRUPTED/
+debug_snaps/
+
+# OS generated files
+.DS_Store
+Thumbs.db

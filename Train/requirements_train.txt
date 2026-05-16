@@ -1,0 +1,6 @@
+numpy<2
+opencv-python
+mss
+onnx
+onnxruntime
+onnxscript
