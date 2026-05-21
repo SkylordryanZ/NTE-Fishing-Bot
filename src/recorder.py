@@ -64,7 +64,8 @@ class ScreenshotRecorder:
             
             moved_count = 0
             for filename in os.listdir(folder):
-                if not filename.endswith(".png"):
+                ext = os.path.splitext(filename)[1].lower()
+                if ext not in {".png", ".jpg", ".jpeg"}:
                     continue
                     
                 filepath = os.path.join(folder, filename)
@@ -93,9 +94,14 @@ class ScreenshotRecorder:
                 os.makedirs(folder, exist_ok=True)
 
                 img = self.capturer.capture()
+                # Downscale directly to target model input size (224x224)
+                img_resized = cv2.resize(img, (224, 224), interpolation=cv2.INTER_AREA)
+                
                 ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                filepath = os.path.join(folder, f"{ts}.png")
-                cv2.imwrite(filepath, img)
+                filepath = os.path.join(folder, f"{ts}.jpg")
+                
+                # Save as compressed JPEG
+                cv2.imwrite(filepath, img_resized, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
 
             except Exception as e:
                 print(f"[Recorder] Error: {e}")

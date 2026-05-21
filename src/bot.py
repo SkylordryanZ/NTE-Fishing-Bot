@@ -7,6 +7,20 @@ from vision import Vision
 from input_sim import InputSimulator
 from recorder import ScreenshotRecorder
 from config import *
+import importlib
+
+def reload_config():
+    """Reloads config.py dynamically and updates bot.py's global variables."""
+    import config
+    try:
+        importlib.reload(config)
+        # Update the global namespace of bot.py with the newly reloaded configuration values
+        for key, val in vars(config).items():
+            if not key.startswith('_'):
+                globals()[key] = val
+        print(">>> Configuration reloaded successfully! Changes applied instantly.")
+    except Exception as e:
+        print(f"!!! Error reloading configuration: {e}")
 
 # ------------------------------------------------------------------ #
 # Windows low-level key detection                                      #
@@ -121,7 +135,8 @@ def setup_shop_macro():
                 
         with open(config_path, "w") as f:
             f.writelines(new_lines)
-        print("\n>>> Shop coordinates saved to config.py! Please restart the bot.")
+        print("\n>>> Shop coordinates saved to config.py!")
+        reload_config()
     except Exception as e:
         print(f"Error saving shop macro coords: {e}")
 
@@ -236,7 +251,8 @@ def setup_collection_macro():
                 
         with open(config_path, "w") as f:
             f.writelines(new_lines)
-        print("\n>>> All coordinates saved to config.py! Please restart the bot.")
+        print("\n>>> All coordinates saved to config.py!")
+        reload_config()
     except Exception as e:
         print(f"Error saving macro coords: {e}")
 
@@ -336,6 +352,7 @@ def main():
                     if is_key_pressed(VK_1):
                         capturer.select_monitor_by_click()
                         print(">>> Monitor updated!")
+                        reload_config()
                         break
                     if is_key_pressed(VK_2):
                         try:
@@ -348,11 +365,18 @@ def main():
                     if is_key_pressed(VK_3):
                         try:
                             val = input(f"\nEnter Auto-Sell Threshold (current {AUTO_SELL_THRESHOLD}): ")
-                            # We update config.py later in setup
-                            # For now just update the local copy if we want
-                            # Actually it's better to just leave it since we're cleaning up
-                            print(">>> Feature under maintenance.")
-                        except: print("!!! Invalid.")
+                            new_val = int(val)
+                            config_path = os.path.join(os.path.dirname(__file__), "config.py")
+                            with open(config_path, "r") as f:
+                                content = f.read()
+                            import re
+                            content = re.sub(r"AUTO_SELL_THRESHOLD\s*=\s*\d+", f"AUTO_SELL_THRESHOLD = {new_val}", content)
+                            with open(config_path, "w") as f:
+                                f.write(content)
+                            reload_config()
+                            print(f">>> Auto-Sell Threshold updated to {new_val}!")
+                        except Exception as e:
+                            print(f"!!! Invalid value or error saving: {e}")
                         break
                     if is_key_pressed(VK_4):
                         try:
@@ -613,7 +637,8 @@ def main():
                         time.sleep(2.0)
                     
                     # 3. Click Weather
-                    target_weather = weather_coords[weather_cycle_index]
+                    current_weather_coords = [MACRO_COORD_WEATHER_1, MACRO_COORD_WEATHER_2, MACRO_COORD_WEATHER_3]
+                    target_weather = current_weather_coords[weather_cycle_index]
                     if target_weather:
                         inputs.click_at(*target_weather)
                         time.sleep(2.0)
@@ -815,6 +840,8 @@ def main():
                 elif sell_step == 3:
                     inputs.click_at(MACRO_COORD_CONFIRM_SELL[0], MACRO_COORD_CONFIRM_SELL[1])
                     print("  [Auto-Sell] Step 4: Clicking Confirm...")
+                    # Set last_action_time forward by 7 seconds so the next step waits 10s total (3s standard + 7s extra)
+                    last_action_time = time.time() + 7.0
                     sell_step = 4
                 elif sell_step == 4:
                     inputs.click_center()
