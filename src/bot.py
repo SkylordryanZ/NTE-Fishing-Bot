@@ -600,6 +600,17 @@ def main():
                     continue
 
                 if auto_shop_pending:
+                    # Prioritize selling fish first if we have caught any in this session
+                    import config
+                    if config.total_fish_session > 0:
+                        print(f"\n>>> Bait is low ({fish_caught_counter}/{bait_count}), but there are {config.total_fish_session} fish to sell first. Starting Auto-Sell...")
+                        current_state = STATE_AUTO_SELL
+                        state_entry_time = time.time()
+                        # Keep auto_shop_pending = True so we proceed to buy bait on the next IDLE cycle after selling completes
+                        sell_step = 0
+                        last_action_time = time.time()
+                        continue
+
                     print("\n>>> STARTING AUTO-SHOP SEQUENCE (From IDLE)...")
                     current_state = STATE_AUTO_SHOP
                     state_entry_time = time.time()
