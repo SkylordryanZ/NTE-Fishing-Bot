@@ -787,25 +787,24 @@ def main():
                 elif shop_step == 5:
                     inputs.click_at(MACRO_COORD_SHOP_EMPTY[0], MACRO_COORD_SHOP_EMPTY[1])
                     print("  [Auto-Shop] Step 6: Clicking Empty Area...")
-                    shop_step = 6
-                elif shop_step == 6:
-                    inputs.press_esc()
-                    print("  [Auto-Shop] Step 7: Closing Shop (ESC)...")
-                    shop_step = 7
-                else:
                     shop_loop_count += 1
                     if shop_loop_count < bait_sets_to_buy:
                         print(f">>> Set {shop_loop_count}/{bait_sets_to_buy} complete. Relooping...")
-                        shop_step = 1 # Back to clicking bait slot or max? User said loop: max -> purchase -> confirm -> empty
-                        # Wait, user said: "loop the max quantity -> purchase -> confirm puirchase -> click empty area -> reloop"
-                        # So we go back to Step 3 (Clicking MAX)
-                        shop_step = 3
+                        # Loop back to clicking MAX (Step 2)
+                        shop_step = 2
                     else:
-                        fish_caught_counter = 0
-                        bait_count = bait_sets_to_buy * 99
-                        print(f">>> AUTO-SHOP COMPLETE! Bought {bait_sets_to_buy} sets. Resuming...")
-                        current_state = STATE_IDLE
-                        state_entry_time = time.time()
+                        # Proceed to Close Shop (Step 6)
+                        shop_step = 6
+                elif shop_step == 6:
+                    inputs.press_esc()
+                    print("  [Auto-Shop] Step 7: Closing Shop (ESC)...")
+                    fish_caught_counter = 0
+                    bait_count = bait_sets_to_buy * 99
+                    print(f">>> AUTO-SHOP COMPLETE! Bought {bait_sets_to_buy} sets. Resuming...")
+                    current_state = STATE_IDLE
+                    state_entry_time = time.time()
+                    shop_step = 0
+                    shop_loop_count = 0
                 last_action_time = time.time()
 
             elif current_state == STATE_INVENTORY:
